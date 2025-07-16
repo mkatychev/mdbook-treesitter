@@ -12,7 +12,7 @@ Install the preprocessor:
 cargo install mdbook-treesitter
 ```
 
-### Configure mdBook
+### Configure mdBook with local grammar:
 
 Add this in your `book.toml`:
 
@@ -22,8 +22,26 @@ additional-js = ["treesitter.js"]
 
 [preprocessor.treesitter]
 command = "mdbook-treesitter"
-languages = ["javascript"]
+[[language]]
+name = "javascript"
 ```
+
+### Configure mdBook with remote grammar:
+
+Add this in your `book.toml`:
+
+```toml
+[output.html]
+additional-js = ["treesitter.js"]
+
+[preprocessor.treesitter]
+command = "mdbook-treesitter"
+[[language]]
+name = "javascript"
+```
+
+
+### Configure `treesitter.js`
 
 Add this javascript in the file `treesitter.js` at the root of your project:
 

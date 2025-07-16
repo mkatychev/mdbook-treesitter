@@ -1,11 +1,11 @@
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Context, Result, anyhow, bail};
 use libloading::{Library, Symbol};
 use map_macro::hash_map;
 use regex::Regex;
-use std::fmt::Write;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
+use std::{fmt::Write, path::PathBuf};
 use tree_sitter::Language;
 use tree_sitter_highlight::{HighlightConfiguration, HighlightEvent, Highlighter};
 
@@ -42,8 +42,26 @@ impl MdbookTreesitterHighlighter {
         }))
     }
 
+    fn get_grammar_file(library_path: &Path) -> Result<PathBuf> {
+        let grammar_dylib = library_path.with_extension("so");
+        if grammar_dylib.exists() {
+            return Ok(grammar_dylib);
+        }
+        #[cfg(feature = "wasm")]
+        {
+            let grammar_wasm = library_path.with_extension("wasm");
+            if grammar_wasm.exists() {
+                return Ok(grammar_wasm);
+            }
+            bail!("Neither {grammar_dylib:?} or {grammar_wasm:?} found in project");
+        }
+        #[cfg(not(feature = "wasm"))]
+        bail!("{grammar_dylib:?} missing from project");
+    }
+
     fn get_language(name: &str) -> Result<Language> {
         let mut library_path = Path::new("treesitter").join(name);
+        Self::get_grammar_file(library_path)
         library_path.set_extension("so");
 
         let library = unsafe { Library::new(&library_path) }
